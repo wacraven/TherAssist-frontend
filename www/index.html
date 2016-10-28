@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html ng-app="calendarApp">
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta name="description" content="Ionic Calendar">
+    <title>Ionic Calendar </title>
+    <link rel="stylesheet" href="http://code.ionicframework.com/1.1.1/css/ionic.min.css"/>
+    <link rel="stylesheet" href="./css/calendar.min.css"/>
+    <script src="http://code.ionicframework.com/1.1.1/js/ionic.bundle.min.js"></script>
+    <script src="js/calendar-tpls.min.js"></script>
+    <script src="js/appCtrl.js"></script>
+</head>
+<body>
+<ion-nav-bar class="bar-positive" align-title="left">
+    <ion-nav-back-button>
+    </ion-nav-back-button>
+</ion-nav-bar>
+
+<ion-nav-view></ion-nav-view>
+
+
+<script id="templates/about.html" type="text/ng-template">
+    <ion-view view-title="About">
+        <ion-content class="padding">
+            <h3>Create hybrid mobile apps with the web technologies you love.</h3>
+        </ion-content>
+    </ion-view>
+</script>
+
+<script id="templates/contact.html" type="text/ng-template">
+    <ion-view title="Contact">
+        <ion-content>
+            <div class="list">
+                <div class="item">
+                    @IonicFramework
+                </div>
+                <div class="item">
+                    @DriftyTeam
+                </div>
+            </div>
+        </ion-content>
+    </ion-view>
+</script>
+
+</body>
+</html>
