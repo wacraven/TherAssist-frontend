@@ -1,14 +1,103 @@
-<ion-view view-title="Add New Patient" name="addPatient-view">
+<ion-view view-title="Add New Patient">
   <ion-content class="padding">
-      <div class="list list-inset">
-          <h4>{{userMessage}}</h4>
-          <label class="item item-input">
-              <input type="text" placeholder="Username" ng-model="data.Username">
-          </label>
-          <label class="item item-input">
-              <input type="password" placeholder="Password" ng-model="data.Password">
-          </label>
+    <h3>Basic Information</h3>
+      <div class="list">
+        <label class="item item-input item-floating-label item-floating-label">
+          Name
+          <input type="text" placeholder="Name" ng-model="data.Name">
+        </label>
       </div>
-      <a href='/#/register' style="text-decoration: none"><button class="button button-block button">Register</button></a>
+      <div class="list list-inset">
+        <label class="item item-input item-floating-label">
+          Contact Name
+          <input type="text" placeholder="Contact Name" ng-model="data.PrimaryContact">
+        </label>
+      </div>
+      <div class="list list-inset">
+        <label class="item item-input item-floating-label">
+          Phone
+          <input type="tel" placeholder="Contact Phone Number" ng-model="data.Phone">
+        </label>
+      </div>
+      <div class="list list-inset">
+        <label class="item item-input item-floating-label">
+          Address
+          <input type="text" placeholder="Address" ng-model="data.Location">
+        </label>
+      </div>
+      <div class="list list-inset">
+        <label class="item item-input item-floating-label">
+          Date of Birth
+          <input type="date" placeholder="Date of Birth" ng-model="data.DateOfBirth">
+        </label>
+      </div>
+    <h3>Patient Information</h3>
+      <div class="list list-inset">
+        <label class="item item-input item-floating-label">
+          Diagnosis
+          <input type="text" placeholder="Diagnosis" ng-model="data.Diagnosis">
+        </label>
+      </div>
+      <div class="list list-inset">
+        <label class="item item-input item-floating-label">
+          Last Evaluation
+          <input type="date" placeholder="Last Evaluation" ng-model="data.LastEvaluation">
+        </label>
+      </div>
+      <div class="list list-inset">
+        <label class="item item-input item-select">
+          <div class="input-label">Evaluation Frequency</div>
+          <select ng-model="data.EvaluationFrequency">
+            <option selected disabled>Select One</option>
+            <option>6 Months</option>
+            <option>5 Months</option>
+            <option>4 Months</option>
+            <option>3 Months</option>
+            <option>2 Months</option>
+            <option>1 Month</option>
+          </select>
+        </label>
+      </div>
+      <div class="list list-inset">
+        <label class="item item-input item-floating-label">
+          Goals
+          <input type="text" placeholder="First Goal" ng-model="data.Goal1">
+        </label>
+        <label class="item item-input item-floating-label">
+
+          <input type="text" placeholder="Second Goal" ng-model="data.Goal2">
+        </label>
+        <label class="item item-input item-floating-label">
+
+          <input type="text" placeholder="Third Goal" ng-model="data.Goal3">
+        </label>
+      </div>
+      <div class="list list-inset">
+        <label class="item item-input item-select">
+          <div class="input-label">Regular Session Time</div>
+          <select ng-model="data.SessionTime">
+            <option selected disabled>Select One</option>
+            <option>2 hours</option>
+            <option>1.5 hours</option>
+            <option>1 hour</option>
+            <option>30 minutes</option>
+          </select>
+        </label>
+      </div>
+      <div class="list list-inset">
+        <label class="item item-input item-select">
+          <div class="input-label">Session Frequency</div>
+          <select ng-model="data.SessionFrequency">
+            <option selected disabled>Select One</option>
+            <option>Every day</option>
+            <option>4 days per week</option>
+            <option>3 days per week</option>
+            <option>2 days per week</option>
+            <option>1 day per week</option>
+          </select>
+        </label>
+      </div>
+      <h3>{{userMessage}}</h3>
+      <button class="button button-block button" ng-click="addPatient()">Add Patient</button>
   </ion-content>
 </ion-view>
