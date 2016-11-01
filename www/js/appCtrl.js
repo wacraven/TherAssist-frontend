@@ -76,7 +76,7 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'ui.rCalendar'])
                 }
             });
 
-        $urlRouterProvider.otherwise('/');            //uncomment after debugging
+        // $urlRouterProvider.otherwise('/');            //uncomment after debugging
     })
 
     .config(function($ionicConfigProvider) {
@@ -135,19 +135,15 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'ui.rCalendar'])
         $scope.changeMode = function (mode) {
             $scope.calendar.mode = mode;
         };
-
         $scope.onEventSelected = function (event) {
             console.log('Event selected:' + event.startTime + '-' + event.endTime + ',' + event.title);
         };
-
         $scope.onViewTitleChanged = function (title) {
             $scope.viewTitle = title;
         };
-
         $scope.today = function () {
             $scope.calendar.currentDate = new Date();
         };
-
         $scope.isToday = function () {
             let today = new Date()
             let currentCalendarDate = new Date($scope.calendar.currentDate);
@@ -155,7 +151,6 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'ui.rCalendar'])
             currentCalendarDate.setHours(0, 0, 0, 0);
             return today.getTime() === currentCalendarDate.getTime();
         };
-
         $scope.onTimeSelected = function (selectedTime, events) {
             console.log('Selected time: ' + selectedTime + ', hasEvents: ' + (events !== undefined && events.length !== 0));
         };
@@ -187,7 +182,11 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'ui.rCalendar'])
         },(error) => {
           console.log(error);
         });
-
+        $scope.viewPatient = function(PatientId) {
+          $rootScope.currentPatient = PatientId
+          console.log($rootScope.currentPatient);
+          $location.path('/tab/viewpatient')
+        }
     })
 
     .controller('AddPatientCtrl', function($scope, $http, $location, $rootScope, $ionicHistory) {
@@ -202,7 +201,7 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'ui.rCalendar'])
       };
       $scope.addPatient = function() {
         console.log($scope.data);
-        if ($scope.data.Name && $scope.data.PrimaryContact && $scope.data.Phone && $scope.data.Location && $scope.data.DateOfBirth && $scope.data.Diagnosis && $scope.data.LastEvaluation && $scope.data.EvaluationFrequency && $scope.data.Goal1 && $scope.data.Goal2 && $scope.data.Goal3 && $scope.data.SessionTime && $scope.data.SessionFrequency) {
+        if ($scope.data.Name && $scope.data.PrimaryContact && $scope.data.Phone && $scope.data.Location && $scope.data.DateOfBirth && $scope.data.Diagnosis && $scope.data.LastEvaluation && $scope.data.EvaluationFrequency && $scope.data.SessionTime && $scope.data.SessionFrequency) {
           $http.post('https://therassist.herokuapp.com/api/patient/new', $scope.data)
           .then(
             (response) => {
@@ -219,22 +218,88 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'ui.rCalendar'])
 
     .controller('ViewPatientCtrl', function($scope, $http, $location, $rootScope) {
       console.log('ViewPatientCtrl FIRED');
-      $scope.data = {
-        ClinicianId: $rootScope.ClinicianId,
-        PatientId: Date.now()
-      };
-      $scope.addPatient = function() {
-        console.log($scope.data);
-        if ($scope.data.Name && $scope.data.PrimaryContact && $scope.data.Phone && $scope.data.Location && $scope.data.DateOfBirth && $scope.data.Diagnosis && $scope.data.LastEvaluation && $scope.data.EvaluationFrequency && $scope.data.Goal1 && $scope.data.Goal2 && $scope.data.Goal3 && $scope.data.SessionTime && $scope.data.SessionFrequency) {
-          $http.post('https://therassist.herokuapp.com/api/patient/new', $scope.data)
-          .then(
-            (response) => {
-              console.log('response',response.data);
-            },(error) => {
-              console.log(error);
-            });
-        } else {
-          $scope.userMessage = 'Please fill out all fields'
+      $http.post('https://therassist.herokuapp.com/api/patient/get/one', { PatientId: $rootScope.currentPatient})
+      .then(
+        (response) => {
+          console.log('response',response.data);
+          $scope.dataClean(response.data)
+        },(error) => {
+          console.log(error);
+        });
+      $scope.dataClean = function(patientData) {
+        patientData.DateOfBirth = patientData.DateOfBirth.split('-')
+        patientData.DateOfBirth[2] = patientData.DateOfBirth[2].substring(0,2)
+        patientData.DisplayDOB = `${patientData.DateOfBirth[1]}/${patientData.DateOfBirth[2]}/${patientData.DateOfBirth[0]}`
+        patientData.DisplayAge = $scope.getAge(patientData.DisplayDOB)
+
+        patientData.LastEvaluation = patientData.LastEvaluation.split('-')
+        patientData.LastEvaluation[2] = patientData.LastEvaluation[2].substring(0,2)
+        patientData.DisplayLastEval = `${patientData.LastEvaluation[1]}/${patientData.LastEvaluation[2]}/${patientData.LastEvaluation[0]}`
+        patientData.DisplayNextEval = `${parseInt(patientData.LastEvaluation[1]) + parseInt(patientData.EvaluationFrequency.split(' ')[0])}/${patientData.LastEvaluation[2]}/${patientData.LastEvaluation[0]}`
+
+        $scope.patient = patientData
+      }
+      $scope.getAge = function(dateString) {    //dateString should be in format MM/DD/YYYY    //function from stackoverflow; link: http://stackoverflow.com/questions/12251325/javascript-date-to-calculate-age-work-by-the-day-months-years
+        var now = new Date();
+        var today = new Date(now.getYear(),now.getMonth(),now.getDate());
+        var yearNow = now.getYear();
+        var monthNow = now.getMonth();
+        var dateNow = now.getDate();
+        var dob = new Date(dateString.substring(6,10),
+                           dateString.substring(0,2)-1,
+                           dateString.substring(3,5)
+                           );
+        var yearDob = dob.getYear();
+        var monthDob = dob.getMonth();
+        var dateDob = dob.getDate();
+        var age = {};
+        var ageString = "";
+        var yearString = "";
+        var monthString = "";
+        var dayString = "";
+        yearAge = yearNow - yearDob;
+        if (monthNow >= monthDob)
+          var monthAge = monthNow - monthDob;
+        else {
+          yearAge--;
+          var monthAge = 12 + monthNow -monthDob;
         }
+        if (dateNow >= dateDob)
+          var dateAge = dateNow - dateDob;
+        else {
+          monthAge--;
+          var dateAge = 31 + dateNow - dateDob;
+          if (monthAge < 0) {
+            monthAge = 11;
+            yearAge--;
+          }
+        }
+        age = {
+            years: yearAge,
+            months: monthAge,
+            days: dateAge
+            };
+        if ( age.years > 1 ) yearString = " years";
+        else yearString = " year";
+        if ( age.months> 1 ) monthString = " months";
+        else monthString = " month";
+        if ( age.days > 1 ) dayString = " days";
+        else dayString = " day";
+        if ( (age.years > 0) && (age.months > 0) && (age.days > 0) )
+          ageString = age.years + yearString + ", " + age.months + monthString + ", and " + age.days + dayString + " old.";
+        else if ( (age.years == 0) && (age.months == 0) && (age.days > 0) )
+          ageString = "Only " + age.days + dayString + " old!";
+        else if ( (age.years > 0) && (age.months == 0) && (age.days == 0) )
+          ageString = age.years + yearString + " old today.";
+        else if ( (age.years > 0) && (age.months > 0) && (age.days == 0) )
+          ageString = age.years + yearString + " and " + age.months + monthString + " old.";
+        else if ( (age.years == 0) && (age.months > 0) && (age.days > 0) )
+          ageString = age.months + monthString + " and " + age.days + dayString + " old.";
+        else if ( (age.years > 0) && (age.months == 0) && (age.days > 0) )
+          ageString = age.years + yearString + " and " + age.days + dayString + " old.";
+        else if ( (age.years == 0) && (age.months > 0) && (age.days == 0) )
+          ageString = age.months + monthString + " old.";
+        else ageString = "Oops! Could not calculate age!";
+        return ageString;
       }
     })

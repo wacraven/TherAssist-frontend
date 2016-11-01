@@ -1,15 +1,56 @@
-<ion-view view-title='Patients'>
-    <ion-nav-buttons side="right">
-        <button class="button" ng-click="goToEditPatient()">New Patient</button>
-    </ion-nav-buttons>
+<ion-view view-title='Patient Details'>
+  <ion-nav-buttons side="right">
+    <button class="button" ng-click="schedulePatient()">Schedule</button>
+    <button class="button" ng-click="goToEditPatient()">Edit</button>
+  </ion-nav-buttons>
 
-    <ion-content scroll="false" class="main-content">
-      <a href='/#/patient/{{patient.PatientId}}' style="text-decoration: none">
-        <div class="card" ng-repeat="patient in patients">
-          <h4>Patient: {{patient.Name}}</h4>
-          <h5>Contact: {{patient.PrimaryContact}}</h5>
-          <h5>Phone: {{patient.Phone}} | Address: {{patient.Location}}</h5>
-        </div>
-      </a>
-    </ion-content>
+  <ion-content overflow-scroll="true" class="main-content">
+    <div class="list">
+      <div class="item item-divider">
+        Basic Information
+      </div>
+      <div class="item">
+        Name: {{patient.Name}}
+      </div>
+      <div class="item">
+        Contact: {{patient.PrimaryContact}}
+      </div>
+      <div class="item">
+        Phone: {{patient.Phone}}
+      </div>
+      <div class="item">
+        Address: {{patient.Location}}
+      </div>
+      <div class="item">
+        Date of Birth: {{patient.DisplayDOB}}
+      </div>
+      <div class="item">
+        Age: {{patient.DisplayAge}}
+      </div>
+      <div class="item item-divider">
+        Patient Information
+      </div>
+      <div class="item">
+        Diagnosis: {{patient.Diagnosis}}
+      </div>
+      <div class="item">
+        Next Evaluation Due: {{patient.DisplayNextEval}}
+      </div>
+      <div class="item">
+        First Goal: {{patient.Goal1}}
+      </div>
+      <div class="item">
+        Second Goal: {{patient.Goal2}}
+      </div>
+      <div class="item">
+        Third Goal: {{patient.Goal3}}
+      </div>
+      <div class="item">
+        Regular Session Time: {{patient.SessionTime}}
+      </div>
+      <div class="item">
+        Number of Weekly Sessions: {{patient.SessionFrequency}}
+      </div>
+    </div>
+  </ion-content>
 </ion-view>
