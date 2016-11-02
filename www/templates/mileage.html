@@ -1,10 +1,15 @@
 <ion-view view-title='Mileage'>
     <ion-nav-buttons side="right">
-        <button class="button" ng-disabled="isToday()" ng-click="today()">test</button>
-        <button class="button" ng-click="changeMode('month')">test</button>
-        <button class="button" ng-click="changeMode('day')">test</button>
     </ion-nav-buttons>
 
     <ion-content scroll="false" class="main-content">
+      <div class="card" ng-repeat="trip in trips">
+        <div ng-click="viewPatient({{patient.PatientId}})">
+          <h4>{{trip.Date}}</h4>
+          <h6>Miles Driven: {{trip.Mileage}}</h6>
+          <h6>Origin: {{trip.Origin}}</h6>
+          <h6>Destination: {{trip.Destination}}</h6>
+        </div>
+      </div>
     </ion-content>
 </ion-view>

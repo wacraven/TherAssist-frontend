@@ -8,7 +8,7 @@ plugins/
 logs
 *.log
 npm-debug.log*
-creds.js
+www/js/creds.js
 
 # Runtime data
 pids

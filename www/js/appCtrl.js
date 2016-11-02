@@ -133,7 +133,12 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
     .controller('RegisterCtrl', function($scope, $http, $location, $rootScope) {
       $scope.data = {};
       $scope.register = function() {
-        if ($scope.data.Username && $scope.data.Password && $scope.data.FullName) {
+        if (!$scope.data.Username || !$scope.data.Password || !$scope.data.FullName) {
+          $scope.userMessage = 'Please fill out all fields'
+        } else if ($scope.data.Password.length < 8) {
+          $scope.userMessage = 'Password must be at least 8 characters'
+        } else {
+          $scope.userMessage = undefined
           console.log("REGISTER user: " + $scope.data.Username + " - PW: " + $scope.data.Password + " - Name: " + $scope.data.FullName );
           $http.post('https://therassist.herokuapp.com/api/register', $scope.data)
           .then(
@@ -144,10 +149,6 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
               console.log(error);
               $scope.userMessage = 'There was an error, please try again'
             });
-        } else if ($scope.data.Password.length < 8) {
-          $scope.userMessage = 'Password must be at least 8 characters'
-        } else {
-          $scope.userMessage = 'Please fill out all fields'
         }
       }
     })
@@ -274,7 +275,7 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
         $scope.goBack = function() {
         console.log('Going back');
         $ionicHistory.backView().go();
-      };
+        };
       $scope.confirmEdit = function() {
         console.log($scope.data);
         if ($scope.data.Name && $scope.data.PrimaryContact && $scope.data.Phone && $scope.data.Location && $scope.data.DateOfBirth && $scope.data.Diagnosis && $scope.data.LastEvaluation && $scope.data.EvaluationFrequency && $scope.data.SessionTime && $scope.data.SessionFrequency) {
@@ -292,7 +293,7 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
       }
     })
 
-    .controller('ViewPatientCtrl', function($scope, $http, $location, $rootScope, $moment) {
+    .controller('ViewPatientCtrl', function($scope, $http, $location, $rootScope, $moment, $ionicPopup) {
       console.log('ViewPatientCtrl FIRED');
       $http.post('https://therassist.herokuapp.com/api/patient/get/one', { PatientId: $rootScope.currentPatient})
       .then(
@@ -302,7 +303,7 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
         },(error) => {
           console.log(error);
         });
-      $scope.dataClean = function(patientData) {
+      $scope.dataClean = function(patientData) {   //convert this to momentjs
         patientData.DateOfBirth = patientData.DateOfBirth.split('-')
         patientData.DateOfBirth[2] = patientData.DateOfBirth[2].substring(0,2)
         patientData.DisplayDOB = `${patientData.DateOfBirth[1]}/${patientData.DateOfBirth[2]}/${patientData.DateOfBirth[0]}`
@@ -312,8 +313,6 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
         patientData.LastEvaluation[2] = patientData.LastEvaluation[2].substring(0,2)
         patientData.DisplayLastEval = `${patientData.LastEvaluation[1]}/${patientData.LastEvaluation[2]}/${patientData.LastEvaluation[0]}`
         patientData.DisplayNextEval = $moment(patientData.LastEvaluation).add(Number(patientData.EvaluationFrequency.split(' ')[0] - 1), 'months').calendar()
-        console.log('# of months', Number(patientData.EvaluationFrequency.split(' ')[0]));
-        console.log('next eval', patientData.DisplayNextEval);
 
         $scope.patient = patientData
       }
@@ -321,9 +320,37 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
         $location.path('/tab/editpatient')
       }
       $scope.startNavigation = function() {
-        navigator.geolocation.getCurrentPosition($scope.navigate, (err) => console.log(err))
+        $ionicPopup.confirm({
+           title: 'Would you like to log a new trip?',
+           template: 'This will log a new trip from your current location to this address'
+         })
+         .then(function(res) {
+           if(res) {
+             console.log('Beginning Navigation');
+             navigator.geolocation.getCurrentPosition($scope.navigate, (err) => console.log(err))
+           } else {
+             console.log('Cancelling Navigation');
+           }
+         });
       }
-      $scope.navigate = (data) => console.log(data);
+      $scope.navigate = (data) => {
+        let tripData = {
+          TripId: Date.now(),
+          ClinicianId: $rootScope.ClinicianId,
+          Date: $moment.utc().format(),
+          lat: data.coords.latitude,
+          long: data.coords.longitude,
+          dest: $scope.patient.Location
+        }
+        console.log(tripData);
+        $http.post('https://therassist.herokuapp.com/api/mileage/new', tripData)
+        .then(
+          (response) => {
+            console.log(response.data);
+          },(error) => {
+            console.log(error);
+          });
+      }
       $scope.schedulePatient = function() {
         $location.path('/tab/schedulenew')
       }
@@ -392,7 +419,7 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
       }
     })
 
-    .controller('ScheduleNewCtrl', function($scope, $http, $location, $rootScope, $moment) {
+    .controller('ScheduleNewCtrl', function($scope, $http, $location, $rootScope, $moment, $ionicHistory) {
       console.log('ScheduleNewCtrl FIRED');
 
       $rootScope.calendarEvents = []
@@ -420,29 +447,32 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
         } else if ($scope.patient.SessionTime === '2 hours') {
           $scope.patient.SessionTime = '120 minutes'
         }
+        $scope.goBack = function() {
+          console.log('Going back');
+          $ionicHistory.backView().go();
+        };
         let startStringUTC = $moment.utc($scope.data.Date).format('YYYY-MM-DD') + 'T' + $moment.utc($scope.data.apptTime).format('HH:mm:ss') + '+00:00'
         console.log('startStringUTC', startStringUTC);
         $scope.data.TimeStart = $moment.utc(startStringUTC).format()
         console.log($scope.data.TimeStart);
         $scope.data.TimeEnd = $moment.utc($scope.data.TimeStart).add(Number($scope.patient.SessionTime.split(' ')[0]), 'minutes').format()
         console.log($scope.data.TimeEnd);
-
         $http.post('https://therassist.herokuapp.com/api/appointment/add', $scope.data)
         .then(
           (response) => {
             console.log(response.data);
+            $scope.goBack()
           },(error) => {
             console.log(error);
           });
       }
     })
 
-    .controller('MileageCtrl', function($scope, $http, $location, $rootScope) {
+    .controller('MileageCtrl', function($scope, $http, $location, $rootScope, $moment) {
       console.log('MileageCtrl FIRED');
-      $scope.goToAddPatient = function() {
-        $location.path('/tab/addpatient')
+      $scope.addManually = function() {
+        // $location.path('/tab/addmileage')
       }
-
       let sort_by = (field, reverse, primer) => {     //sorting array from stackoverflow. link: http://stackoverflow.com/questions/979256/sorting-an-array-of-javascript-objects
          var key = primer ?
              function(x) {return primer(x[field])} :
@@ -452,14 +482,23 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
              return a = key(a), b = key(b), reverse * ((a > b) - (b > a));
            }
       }
-
       $scope.trips = []
-      $http.post('https://therassist.herokuapp.com/api/patient/get/all', {ClinicianId: $rootScope.ClinicianId})
+      $http.post('https://therassist.herokuapp.com/api/mileage/get', {ClinicianId: $rootScope.ClinicianId})
       .then(
         (response) => {
           console.log(response.data);
-          $scope.trips = response.data.sort(sort_by('Name', false))
+          for (var i = 0; i < response.data.length; i++) {
+            response.data[i].Date = $moment(response.data[i].Date).format('ddd, MMM Do YYYY, h:mm a')
+          }
+          $scope.trips = response.data.sort(sort_by('Date', false))
         },(error) => {
           console.log(error);
         });
+    })
+
+    .controller('SettingsCtrl', function($scope, $http, $location, $rootScope) {
+      console.log('SettingsCtrl FIRED');
+      $scope.logout = function() {
+        $location.path('/')
+      }
     })
