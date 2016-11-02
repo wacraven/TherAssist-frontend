@@ -94,7 +94,7 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
                 }
             });
 
-        // $urlRouterProvider.otherwise('/');            //uncomment after debugging
+        $urlRouterProvider.otherwise('/');            //uncomment after debugging
     })
 
     .config(function($ionicConfigProvider) {
