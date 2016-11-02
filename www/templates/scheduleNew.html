@@ -1,0 +1,25 @@
+<ion-view view-title="Add New Appointment">
+  <ion-content class="padding">
+      <div class="list">
+        <div class="item item-divider">
+          Patient: {{patient.Name}}
+        </div>
+      </div>
+      <div class="list list-inset">
+      <div class="list list-inset">
+        <label class="item item-input item-floating-label">
+          Date
+          <input type="date" placeholder="" ng-model="data.Date">
+        </label>
+      </div>
+      <div class="list list-inset">
+        <label class="item item-input item-floating-label">
+          Appointment Time
+          <input type="time" placeholder="" ng-model="data.apptTime">
+        </label>
+      </div>
+      <div class="list list-inset">
+      <h3>{{userMessage}}</h3>
+      <button class="button button-block button" ng-click="addAppointment()">Add Appointment</button>
+  </ion-content>
+</ion-view>

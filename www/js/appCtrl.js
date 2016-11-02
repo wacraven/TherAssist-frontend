@@ -1,4 +1,4 @@
-angular.module('calendarApp', ['ionic', 'ngAnimate', 'ui.rCalendar'])
+angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCalendar'])
     .run(function ($ionicPlatform, $animate) {
         'use strict';
         $animate.enabled(false);
@@ -57,6 +57,24 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'ui.rCalendar'])
                     }
                 }
             })
+            .state('tabs.schedulenew', {
+                url: '/schedulenew',
+                views: {
+                    'patients-tab': {
+                        templateUrl: 'templates/scheduleNew.html',
+                        controller: 'ScheduleNewCtrl'
+                    }
+                }
+            })
+            .state('tabs.editpatient', {
+                url: '/editpatient',
+                views: {
+                    'patients-tab': {
+                        templateUrl: 'templates/editPatient.html',
+                        controller: 'EditPatientCtrl'
+                    }
+                }
+            })
             .state('tabs.mileage', {
                 url: '/mileage',
                 views: {
@@ -82,6 +100,12 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'ui.rCalendar'])
     .config(function($ionicConfigProvider) {
       $ionicConfigProvider.views.maxCache(0);
       $ionicConfigProvider.backButton.text('Go Back').icon('ion-chevron-left');
+    })
+
+    .config(function($momentProvider){
+      $momentProvider
+        .asyncLoading(false)
+        .scriptUrl('//cdnjs.cloudflare.com/ajax/libs/moment.js/2.5.1/moment.min.js');
     })
 
     .controller('LoginCtrl', function($scope, $http, $location, $rootScope) {
@@ -128,7 +152,7 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'ui.rCalendar'])
       }
     })
 
-    .controller('CalendarCtrl', function ($scope) {
+    .controller('CalendarCtrl', function ($scope, $rootScope, $http, $moment) {
       console.log('CalendarCtrl FIRED');
         'use strict';
         $scope.calendar = {};
@@ -154,6 +178,25 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'ui.rCalendar'])
         $scope.onTimeSelected = function (selectedTime, events) {
             console.log('Selected time: ' + selectedTime + ', hasEvents: ' + (events !== undefined && events.length !== 0));
         };
+        $scope.calendar.eventSource = []
+        $http.post('https://therassist.herokuapp.com/api/appointment/get/all', { ClinicianId: $rootScope.ClinicianId })
+        .then(
+          (appointment) => {
+            let events = []
+            for (var i = 0; i < appointment.data.length; i++) {
+              let nextEvent = {
+                title: appointment.data[i].Title,
+                startTime: $moment(appointment.data[i].TimeStart).subtract(1, 'hour').format(),  //works but check on .subtract()
+                endTime: $moment(appointment.data[i].TimeEnd).subtract(1, 'hour').format(),      // look at formatting 2016-11-01T13:00:00-05:00 see if get am/pm http://momentjs.com/docs/#/displaying/format/
+                allDay: false
+              }
+              console.log(nextEvent);
+              events.push(nextEvent)
+            }
+            $scope.calendar.eventSource = events
+          },(error) => {
+            console.log(error);
+          });
     })
 
     .controller('PatientsCtrl', function($scope, $http, $location, $rootScope) {
@@ -216,7 +259,40 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'ui.rCalendar'])
       }
     })
 
-    .controller('ViewPatientCtrl', function($scope, $http, $location, $rootScope) {
+    .controller('EditPatientCtrl', function($scope, $http, $location, $rootScope, $ionicHistory) {
+      console.log('EditPatientCtrl FIRED');
+      $http.post('https://therassist.herokuapp.com/api/patient/get/one', { PatientId: $rootScope.currentPatient})
+      .then(
+        (response) => {
+          response.data.DateOfBirth = new Date(response.data.DateOfBirth.substring(0, 10).replace(/-/, '/'))
+          response.data.LastEvaluation = new Date(response.data.LastEvaluation.substring(0, 10).replace(/-/, '/'))
+          console.log('response',response.data);
+          $scope.data = response.data
+        },(error) => {
+          console.log(error);
+        });
+        $scope.goBack = function() {
+        console.log('Going back');
+        $ionicHistory.backView().go();
+      };
+      $scope.confirmEdit = function() {
+        console.log($scope.data);
+        if ($scope.data.Name && $scope.data.PrimaryContact && $scope.data.Phone && $scope.data.Location && $scope.data.DateOfBirth && $scope.data.Diagnosis && $scope.data.LastEvaluation && $scope.data.EvaluationFrequency && $scope.data.SessionTime && $scope.data.SessionFrequency) {
+          $http.post('https://therassist.herokuapp.com/api/patient/edit', $scope.data)
+          .then(
+            (response) => {
+              $scope.goBack()
+              console.log('response',response.data);
+            },(error) => {
+              console.log('error',error);
+            });
+        } else {
+          $scope.userMessage = 'Please fill out all fields'
+        }
+      }
+    })
+
+    .controller('ViewPatientCtrl', function($scope, $http, $location, $rootScope, $moment) {
       console.log('ViewPatientCtrl FIRED');
       $http.post('https://therassist.herokuapp.com/api/patient/get/one', { PatientId: $rootScope.currentPatient})
       .then(
@@ -235,9 +311,21 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'ui.rCalendar'])
         patientData.LastEvaluation = patientData.LastEvaluation.split('-')
         patientData.LastEvaluation[2] = patientData.LastEvaluation[2].substring(0,2)
         patientData.DisplayLastEval = `${patientData.LastEvaluation[1]}/${patientData.LastEvaluation[2]}/${patientData.LastEvaluation[0]}`
-        patientData.DisplayNextEval = `${parseInt(patientData.LastEvaluation[1]) + parseInt(patientData.EvaluationFrequency.split(' ')[0])}/${patientData.LastEvaluation[2]}/${patientData.LastEvaluation[0]}`
+        patientData.DisplayNextEval = $moment(patientData.LastEvaluation).add(Number(patientData.EvaluationFrequency.split(' ')[0] - 1), 'months').calendar()
+        console.log('# of months', Number(patientData.EvaluationFrequency.split(' ')[0]));
+        console.log('next eval', patientData.DisplayNextEval);
 
         $scope.patient = patientData
+      }
+      $scope.goToEditPatient = function() {
+        $location.path('/tab/editpatient')
+      }
+      $scope.startNavigation = function() {
+        navigator.geolocation.getCurrentPosition($scope.navigate, (err) => console.log(err))
+      }
+      $scope.navigate = (data) => console.log(data);
+      $scope.schedulePatient = function() {
+        $location.path('/tab/schedulenew')
       }
       $scope.getAge = function(dateString) {    //dateString should be in format MM/DD/YYYY    //function from stackoverflow; link: http://stackoverflow.com/questions/12251325/javascript-date-to-calculate-age-work-by-the-day-months-years
         var now = new Date();
@@ -302,4 +390,76 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'ui.rCalendar'])
         else ageString = "Oops! Could not calculate age!";
         return ageString;
       }
+    })
+
+    .controller('ScheduleNewCtrl', function($scope, $http, $location, $rootScope, $moment) {
+      console.log('ScheduleNewCtrl FIRED');
+
+      $rootScope.calendarEvents = []
+      $http.post('https://therassist.herokuapp.com/api/patient/get/one', {PatientId: $rootScope.currentPatient})
+      .then(
+        (response) => {
+          console.log(response.data);
+          $scope.patient = response.data
+        },(error) => {
+          console.log(error);
+        });
+
+        $scope.data = {
+          PatientId: $rootScope.currentPatient,
+          ClinicianId: $rootScope.ClinicianId
+        }
+      $scope.addAppointment = function() {
+        $scope.data.Title = $scope.patient.Name
+        $scope.data.AppointmentId = Date.now()
+
+        if ($scope.patient.SessionTime === '1 hour') {
+          $scope.patient.SessionTime = '60 minutes'
+        } else if ($scope.patient.SessionTime === '1.5 hours') {
+          $scope.patient.SessionTime = '90 minutes'
+        } else if ($scope.patient.SessionTime === '2 hours') {
+          $scope.patient.SessionTime = '120 minutes'
+        }
+        let startStringUTC = $moment.utc($scope.data.Date).format('YYYY-MM-DD') + 'T' + $moment.utc($scope.data.apptTime).format('HH:mm:ss') + '+00:00'
+        console.log('startStringUTC', startStringUTC);
+        $scope.data.TimeStart = $moment.utc(startStringUTC).format()
+        console.log($scope.data.TimeStart);
+        $scope.data.TimeEnd = $moment.utc($scope.data.TimeStart).add(Number($scope.patient.SessionTime.split(' ')[0]), 'minutes').format()
+        console.log($scope.data.TimeEnd);
+
+        $http.post('https://therassist.herokuapp.com/api/appointment/add', $scope.data)
+        .then(
+          (response) => {
+            console.log(response.data);
+          },(error) => {
+            console.log(error);
+          });
+      }
+    })
+
+    .controller('MileageCtrl', function($scope, $http, $location, $rootScope) {
+      console.log('MileageCtrl FIRED');
+      $scope.goToAddPatient = function() {
+        $location.path('/tab/addpatient')
+      }
+
+      let sort_by = (field, reverse, primer) => {     //sorting array from stackoverflow. link: http://stackoverflow.com/questions/979256/sorting-an-array-of-javascript-objects
+         var key = primer ?
+             function(x) {return primer(x[field])} :
+             function(x) {return x[field]};
+         reverse = !reverse ? 1 : -1;
+         return function (a, b) {
+             return a = key(a), b = key(b), reverse * ((a > b) - (b > a));
+           }
+      }
+
+      $scope.trips = []
+      $http.post('https://therassist.herokuapp.com/api/patient/get/all', {ClinicianId: $rootScope.ClinicianId})
+      .then(
+        (response) => {
+          console.log(response.data);
+          $scope.trips = response.data.sort(sort_by('Name', false))
+        },(error) => {
+          console.log(error);
+        });
     })

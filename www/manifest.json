@@ -1,6 +1,6 @@
 {
-  "name": "My Ionic App",
-  "short_name": "My Ionic App",
+  "name": "TherAssist: Scheduler & Mileage Tracker",
+  "short_name": "TherAssist",
   "start_url": "index.html",
   "display": "standalone",
   "icons": [{
