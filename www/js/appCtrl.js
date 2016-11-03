@@ -128,6 +128,10 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
           $scope.userMessage = 'There was an error, please try again'
         });
       }
+      $scope.goToRegister = function() {
+        console.log('register!!');
+        $location.path('/register')
+      }
     })
 
     .controller('RegisterCtrl', function($scope, $http, $location, $rootScope) {
@@ -204,7 +208,6 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
       console.log('PatientsCtrl FIRED');
       $scope.goToAddPatient = function() {
         $location.path('/tab/addpatient')
-
       }
 
       let sort_by = (field, reverse, primer) => {     //sorting array from stackoverflow. link: http://stackoverflow.com/questions/979256/sorting-an-array-of-javascript-objects
