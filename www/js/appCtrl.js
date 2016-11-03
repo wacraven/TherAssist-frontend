@@ -129,7 +129,6 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
         });
       }
       $scope.goToRegister = function() {
-        console.log('register!!');
         $location.path('/register')
       }
     })
