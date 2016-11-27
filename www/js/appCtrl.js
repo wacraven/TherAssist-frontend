@@ -262,13 +262,13 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
       }
     })
 
-    .controller('EditPatientCtrl', function($scope, $http, $location, $rootScope, $ionicHistory) {
+    .controller('EditPatientCtrl', function($scope, $http, $location, $rootScope, $ionicHistory, $moment) {
       console.log('EditPatientCtrl FIRED');
       $http.post('https://therassist.herokuapp.com/api/patient/get/one', { PatientId: $rootScope.currentPatient})
       .then(
         (response) => {
-          response.data.DateOfBirth = new Date(response.data.DateOfBirth.substring(0, 10).replace(/-/, '/'))
-          response.data.LastEvaluation = new Date(response.data.LastEvaluation.substring(0, 10).replace(/-/, '/'))
+          response.data.DateOfBirth = new Date($moment(response.data.DateOfBirth).format())
+          response.data.LastEvaluation = new Date($moment(response.data.LastEvaluation).format())
           console.log('response',response.data);
           $scope.data = response.data
         },(error) => {
