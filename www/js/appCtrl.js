@@ -190,11 +190,11 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
             for (var i = 0; i < appointment.data.length; i++) {
               let nextEvent = {
                 title: appointment.data[i].Title,
-                startTime: $moment(appointment.data[i].TimeStart).subtract(1, 'hour').format(),  //works but check on .subtract()
-                endTime: $moment(appointment.data[i].TimeEnd).subtract(1, 'hour').format(),      // look at formatting 2016-11-01T13:00:00-05:00 see if get am/pm http://momentjs.com/docs/#/displaying/format/
+                startTime: $moment(appointment.data[i].TimeStart)/*.subtract(1, 'hour')*/.format(),  //works but check on .subtract()
+                endTime: $moment(appointment.data[i].TimeEnd)/*.subtract(1, 'hour')*/.format(),      // look at formatting 2016-11-01T13:00:00-05:00 see if get am/pm http://momentjs.com/docs/#/displaying/format/
                 allDay: false
               }
-              console.log(nextEvent);
+              console.log('nextEvent', nextEvent);
               events.push(nextEvent)
             }
             $scope.calendar.eventSource = events
@@ -344,11 +344,11 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
           long: data.coords.longitude,
           dest: $scope.patient.Location
         }
-        console.log(tripData);
+        console.log(tripData); // Data sent to heroku server
         $http.post('https://therassist.herokuapp.com/api/mileage/new', tripData)
         .then(
           (response) => {
-            console.log(response.data);
+            console.log(response.data); // Full object saved in DB
           },(error) => {
             console.log(error);
           });
