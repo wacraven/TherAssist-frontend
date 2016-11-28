@@ -57,6 +57,15 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
                     }
                 }
             })
+            .state('tabs.editpatient', {
+              url: '/editpatient',
+              views: {
+                'patients-tab': {
+                  templateUrl: 'templates/editPatient.html',
+                  controller: 'EditPatientCtrl'
+                }
+              }
+            })
             .state('tabs.schedulenew', {
                 url: '/schedulenew',
                 views: {
@@ -66,14 +75,32 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
                     }
                 }
             })
-            .state('tabs.editpatient', {
-                url: '/editpatient',
+            .state('tabs.scheduleview', {
+              url: '/scheduleview',
+              views: {
+                'calendar-tab': {
+                  templateUrl: 'templates/scheduleView.html',
+                  controller: 'ScheduleViewCtrl'
+                }
+              }
+            })
+            .state('tabs.viewpatientfromsched', {
+                url: '/viewpatientfromsched',
                 views: {
-                    'patients-tab': {
-                        templateUrl: 'templates/editPatient.html',
-                        controller: 'EditPatientCtrl'
+                    'calendar-tab': {
+                        templateUrl: 'templates/viewPatientFromSched.html',
+                        controller: 'ViewPatientFromSchedCtrl'
                     }
                 }
+            })
+            .state('tabs.scheduleedit', {
+              url: '/scheduleedit',
+              views: {
+                'calendar-tab': {
+                  templateUrl: 'templates/scheduleEdit.html',
+                  controller: 'ScheduleEditCtrl'
+                }
+              }
             })
             .state('tabs.mileage', {
                 url: '/mileage',
@@ -156,7 +183,7 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
       }
     })
 
-    .controller('CalendarCtrl', function ($scope, $rootScope, $http, $moment) {
+    .controller('CalendarCtrl', function ($scope, $rootScope, $http, $location, $moment) {
       console.log('CalendarCtrl FIRED');
         'use strict';
         $scope.calendar = {};
@@ -165,6 +192,17 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
         };
         $scope.onEventSelected = function (event) {
             console.log('Event selected:' + event.startTime + '-' + event.endTime + ',' + event.title);
+            event.startTime = $moment(event.startTime).utc().format()
+            $http.post('https://therassist.herokuapp.com/api/appointment/search', event)
+            .then(
+              (response) => {
+                console.log('SEARCH TERM', event);
+                console.log('SEARCH RESPONSE', response.data);
+                $rootScope.selectedAppointment = response.data[0].AppointmentId
+                $location.path('/tab/scheduleview')
+              },(error) => {
+                console.log(error);
+              });
         };
         $scope.onViewTitleChanged = function (title) {
             $scope.viewTitle = title;
@@ -469,6 +507,196 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
           });
       }
     })
+
+    .controller('ScheduleViewCtrl', function($scope, $http, $location, $rootScope, $moment) {
+      console.log('ScheduleViewCtrl FIRED');
+      $scope.data = {};
+      $http.post('https://therassist.herokuapp.com/api/appointment/get/one', { AppointmentId: $rootScope.selectedAppointment })
+      .then(
+        (response) => {
+          console.log(response.data);
+          let newData = response.data;
+          newData.Date = $moment(newData.TimeStart).format("ddd, MMM D, YYYY")
+          newData.TimeStart = $moment(newData.TimeStart).format("h:mmA")
+          newData.TimeEnd = $moment(newData.TimeEnd).format("h:mmA")
+          $scope.data = newData;
+        },(error) => {
+          console.log(error);
+        });
+      $scope.goToPatient = function() {
+        $rootScope.currentPatient = $scope.data.PatientId
+        console.log($rootScope.currentPatient);
+        $location.path('/tab/viewpatientfromsched')
+      }
+      $scope.goToEditAppointment = function() {
+        $location.path('/tab/scheduleedit')
+      }
+    })
+
+    .controller('ViewPatientFromSchedCtrl', function($scope, $http, $location, $rootScope, $moment, $ionicPopup) {
+      console.log('ViewPatientFromSchedCtrl FIRED');
+      $http.post('https://therassist.herokuapp.com/api/patient/get/one', { PatientId: $rootScope.currentPatient})
+      .then(
+        (response) => {
+          console.log('response',response.data);
+          $scope.dataClean(response.data)
+        },(error) => {
+          console.log(error);
+        });
+      $scope.dataClean = function(patientData) {   //convert this to momentjs
+        patientData.DateOfBirth = patientData.DateOfBirth.split('-')
+        patientData.DateOfBirth[2] = patientData.DateOfBirth[2].substring(0,2)
+        patientData.DisplayDOB = `${patientData.DateOfBirth[1]}/${patientData.DateOfBirth[2]}/${patientData.DateOfBirth[0]}`
+        patientData.DisplayAge = $scope.getAge(patientData.DisplayDOB)
+
+        patientData.LastEvaluation = patientData.LastEvaluation.split('-')
+        patientData.LastEvaluation[2] = patientData.LastEvaluation[2].substring(0,2)
+        patientData.DisplayLastEval = `${patientData.LastEvaluation[1]}/${patientData.LastEvaluation[2]}/${patientData.LastEvaluation[0]}`
+        patientData.DisplayNextEval = $moment(patientData.LastEvaluation).add(Number(patientData.EvaluationFrequency.split(' ')[0] - 1), 'months').calendar()
+
+        $scope.patient = patientData
+      }
+      $scope.goToEditPatient = function() {
+        $location.path('/tab/editpatient')
+      }
+      $scope.startNavigation = function() {
+        $ionicPopup.confirm({
+           title: 'Would you like to log a new trip?',
+           template: 'This will log a new trip from your current location to this address'
+         })
+         .then(function(res) {
+           if(res) {
+             console.log('Beginning Navigation');
+             navigator.geolocation.getCurrentPosition($scope.navigate, (err) => console.log(err))
+           } else {
+             console.log('Cancelling Navigation');
+           }
+         });
+      }
+      $scope.navigate = (data) => {
+        let tripData = {
+          TripId: Date.now(),
+          ClinicianId: $rootScope.ClinicianId,
+          Date: $moment.utc().format(),
+          lat: data.coords.latitude,
+          long: data.coords.longitude,
+          dest: $scope.patient.Location
+        }
+        console.log(tripData); // Data sent to heroku server
+        $http.post('https://therassist.herokuapp.com/api/mileage/new', tripData)
+        .then(
+          (response) => {
+            console.log(response.data); // Full object saved in DB
+          },(error) => {
+            console.log(error);
+          });
+      }
+      $scope.schedulePatient = function() {
+        $location.path('/tab/schedulenew')
+      }
+      $scope.getAge = function(dateString) {    //dateString should be in format MM/DD/YYYY    //function from stackoverflow; link: http://stackoverflow.com/questions/12251325/javascript-date-to-calculate-age-work-by-the-day-months-years
+        var now = new Date();
+        var today = new Date(now.getYear(),now.getMonth(),now.getDate());
+        var yearNow = now.getYear();
+        var monthNow = now.getMonth();
+        var dateNow = now.getDate();
+        var dob = new Date(dateString.substring(6,10),
+                           dateString.substring(0,2)-1,
+                           dateString.substring(3,5)
+                           );
+        var yearDob = dob.getYear();
+        var monthDob = dob.getMonth();
+        var dateDob = dob.getDate();
+        var age = {};
+        var ageString = "";
+        var yearString = "";
+        var monthString = "";
+        var dayString = "";
+        yearAge = yearNow - yearDob;
+        if (monthNow >= monthDob)
+          var monthAge = monthNow - monthDob;
+        else {
+          yearAge--;
+          var monthAge = 12 + monthNow -monthDob;
+        }
+        if (dateNow >= dateDob)
+          var dateAge = dateNow - dateDob;
+        else {
+          monthAge--;
+          var dateAge = 31 + dateNow - dateDob;
+          if (monthAge < 0) {
+            monthAge = 11;
+            yearAge--;
+          }
+        }
+        age = {
+            years: yearAge,
+            months: monthAge,
+            days: dateAge
+            };
+        if ( age.years > 1 ) yearString = " years";
+        else yearString = " year";
+        if ( age.months> 1 ) monthString = " months";
+        else monthString = " month";
+        if ( age.days > 1 ) dayString = " days";
+        else dayString = " day";
+        if ( (age.years > 0) && (age.months > 0) && (age.days > 0) )
+          ageString = age.years + yearString + ", " + age.months + monthString + ", and " + age.days + dayString + " old.";
+        else if ( (age.years == 0) && (age.months == 0) && (age.days > 0) )
+          ageString = "Only " + age.days + dayString + " old!";
+        else if ( (age.years > 0) && (age.months == 0) && (age.days == 0) )
+          ageString = age.years + yearString + " old today.";
+        else if ( (age.years > 0) && (age.months > 0) && (age.days == 0) )
+          ageString = age.years + yearString + " and " + age.months + monthString + " old.";
+        else if ( (age.years == 0) && (age.months > 0) && (age.days > 0) )
+          ageString = age.months + monthString + " and " + age.days + dayString + " old.";
+        else if ( (age.years > 0) && (age.months == 0) && (age.days > 0) )
+          ageString = age.years + yearString + " and " + age.days + dayString + " old.";
+        else if ( (age.years == 0) && (age.months > 0) && (age.days == 0) )
+          ageString = age.months + monthString + " old.";
+        else ageString = "Oops! Could not calculate age!";
+        return ageString;
+      }
+    })
+
+    .controller('ScheduleEditCtrl', function($scope, $http, $location, $rootScope, $ionicHistory, $moment) {
+      console.log('ScheduleEditCtrl FIRED');
+      $scope.data = {};
+      $http.post('https://therassist.herokuapp.com/api/appointment/get/one', { AppointmentId: $rootScope.selectedAppointment })
+      .then(
+        (response) => {
+          console.log(response.data);
+          let newData = response.data;
+          newData.Date = new Date($moment(newData.TimeStart).format())
+          newData.TimeStart = new Date($moment(newData.TimeStart).local().format())
+          newData.TimeEnd = new Date($moment(newData.TimeEnd).local().format())
+          $scope.data = newData;
+        },(error) => {
+          console.log(error);
+        });
+      $scope.goBack = function() {
+        console.log('Going back');
+        $ionicHistory.backView().go();
+      };
+      $scope.confirmEdit = function() {
+        let date = $moment($scope.data.Date).format("YYYY-MM-DD")
+        console.log(date);
+        $scope.data.TimeStart = $moment($scope.data.TimeStart).format("HH:ss:SSZ")
+        $scope.data.TimeEnd = $moment($scope.data.TimeEnd).format("HH:ss:SSZ")
+
+        $scope.data.TimeStart = $moment(date + 'T' + $scope.data.TimeStart).utc().format()
+        $scope.data.TimeEnd = $moment(date + 'T' + $scope.data.TimeEnd).utc().format()
+        $http.post('https://therassist.herokuapp.com/api/appointment/edit', $scope.data)
+        .then(
+          (response) => {
+            console.log(response.data);
+            $scope.goBack()
+          },(error) => {
+            console.log(error);
+          });
+      }
+    })
+
 
     .controller('MileageCtrl', function($scope, $http, $location, $rootScope, $moment) {
       console.log('MileageCtrl FIRED');

@@ -1,0 +1,31 @@
+<ion-view view-title="Edit Appointment">
+  <ion-content class="padding">
+      <div class="list">
+        <div class="item item-divider">
+          Patient: {{data.Title}}
+        </div>
+      </div>
+      <div class="list list-inset">
+      <div class="list list-inset">
+        <label class="item item-input item-floating-label">
+          Date
+          <input type="date" placeholder="" ng-model="data.Date">
+        </label>
+      </div>
+      <div class="list list-inset">
+        <label class="item item-input item-floating-label">
+          Appointment Start Time
+          <input type="time" placeholder="" ng-model="data.TimeStart">
+        </label>
+      </div>
+      <div class="list list-inset">
+        <label class="item item-input item-floating-label">
+          Appointment End Time
+          <input type="time" placeholder="" ng-model="data.TimeEnd">
+        </label>
+      </div>
+      <div class="list list-inset">
+      <h3>{{userMessage}}</h3>
+      <button class="button button-block button" ng-click="confirmEdit()">Confirm Edit</button>
+  </ion-content>
+</ion-view>

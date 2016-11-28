@@ -1,0 +1,54 @@
+<ion-view view-title='Patient Details'>
+  <ion-nav-buttons side="right">
+  </ion-nav-buttons>
+
+  <ion-content overflow-scroll="true" class="main-content">
+    <div class="list">
+      <div class="item item-divider">
+        Basic Information
+      </div>
+      <div class="item">
+        Name: {{patient.Name}}
+      </div>
+      <div class="item">
+        Contact: {{patient.PrimaryContact}}
+      </div>
+      <div class="item">
+        Phone: {{patient.Phone}}
+      </div>
+      <div class="item" ng-click="startNavigation()">
+        Address: {{patient.Location}}
+      </div>
+      <div class="item">
+        Date of Birth: {{patient.DisplayDOB}}
+      </div>
+      <div class="item">
+        Age: {{patient.DisplayAge}}
+      </div>
+      <div class="item item-divider">
+        Patient Information
+      </div>
+      <div class="item">
+        Diagnosis: {{patient.Diagnosis}}
+      </div>
+      <div class="item">
+        Next Evaluation Due: {{patient.DisplayNextEval}}
+      </div>
+      <div class="item">
+        First Goal: {{patient.Goal1}}
+      </div>
+      <div class="item">
+        Second Goal: {{patient.Goal2}}
+      </div>
+      <div class="item">
+        Third Goal: {{patient.Goal3}}
+      </div>
+      <div class="item">
+        Regular Session Time: {{patient.SessionTime}}
+      </div>
+      <div class="item">
+        Number of Weekly Sessions: {{patient.SessionFrequency}}
+      </div>
+    </div>
+  </ion-content>
+</ion-view>
