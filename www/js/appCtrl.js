@@ -196,8 +196,6 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
             $http.post('https://therassist.herokuapp.com/api/appointment/search', event)
             .then(
               (response) => {
-                console.log('SEARCH TERM', event);
-                console.log('SEARCH RESPONSE', response.data);
                 $rootScope.selectedAppointment = response.data[0].AppointmentId
                 $location.path('/tab/scheduleview')
               },(error) => {
@@ -225,6 +223,15 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
         .then(
           (appointment) => {
             let events = []
+            let sort_by = (field, reverse, primer) => {     //sorting array from stackoverflow. link: http://stackoverflow.com/questions/979256/sorting-an-array-of-javascript-objects
+               var key = primer ?
+                   function(x) {return primer(x[field])} :
+                   function(x) {return x[field]};
+               reverse = !reverse ? 1 : -1;
+               return function (a, b) {
+                   return a = key(a), b = key(b), reverse * ((a > b) - (b > a));
+                 }
+            }
             for (var i = 0; i < appointment.data.length; i++) {
               let nextEvent = {
                 title: appointment.data[i].Title,
@@ -235,7 +242,8 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
               console.log('nextEvent', nextEvent);
               events.push(nextEvent)
             }
-            $scope.calendar.eventSource = events
+            $scope.calendar.eventSource = events.sort(sort_by('startTime', false))
+            console.log('eventSource', $scope.calendar.eventSource);
           },(error) => {
             console.log(error);
           });
