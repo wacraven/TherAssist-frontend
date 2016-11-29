@@ -689,8 +689,8 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
       $scope.confirmEdit = function() {
         let date = $moment($scope.data.Date).format("YYYY-MM-DD")
         console.log(date);
-        $scope.data.TimeStart = $moment($scope.data.TimeStart).format("HH:ss:SSZ")
-        $scope.data.TimeEnd = $moment($scope.data.TimeEnd).format("HH:ss:SSZ")
+        $scope.data.TimeStart = $moment($scope.data.TimeStart).format("HH:mm:ssZ")
+        $scope.data.TimeEnd = $moment($scope.data.TimeEnd).format("HH:mm:ssZ")
 
         $scope.data.TimeStart = $moment(date + 'T' + $scope.data.TimeStart).utc().format()
         $scope.data.TimeEnd = $moment(date + 'T' + $scope.data.TimeEnd).utc().format()
