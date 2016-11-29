@@ -703,6 +703,16 @@ angular.module('calendarApp', ['ionic', 'ngAnimate', 'angular-momentjs', 'ui.rCa
             console.log(error);
           });
       }
+      $scope.deleteAppointment = function() {
+        $http.post('https://therassist.herokuapp.com/api/appointment/delete', { AppointmentId: $rootScope.selectedAppointment })
+        .then(
+          (response) => {
+            console.log(response.data);
+            $location.path('/tab/calendar')
+          },(error) => {
+            console.log(error);
+          });
+      }
     })
 
 
