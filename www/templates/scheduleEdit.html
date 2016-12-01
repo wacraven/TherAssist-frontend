@@ -1,34 +1,47 @@
 <ion-view view-title="Edit Appointment">
   <ion-content class="padding">
-      <div class="list">
-        <div class="item item-divider">
-          Patient: {{data.Title}}
-        </div>
+    <div class="list">
+      <div class="item item-divider">
+        Patient: {{data.Title}}
       </div>
-      <div class="list list-inset">
-      <div class="list list-inset">
-        <label class="item item-input item-floating-label">
-          Date
-          <input type="date" placeholder="" ng-model="data.Date">
-        </label>
-      </div>
-      <div class="list list-inset">
-        <label class="item item-input item-floating-label">
-          Appointment Start Time
-          <input type="time" placeholder="" ng-model="data.TimeStart">
-        </label>
-      </div>
-      <div class="list list-inset">
-        <label class="item item-input item-floating-label">
-          Appointment End Time
-          <input type="time" placeholder="" ng-model="data.TimeEnd">
-        </label>
-      </div>
-      <div class="list list-inset">
-      <h3>{{userMessage}}</h3>
-      <button class="button button-block button" ng-click="confirmEdit()">Confirm Edit</button>
-      <br/>
-      <br/>
-      <button class="button-block button button-assertive" ng-click="deleteAppointment()">Delete</button>
+    </div>
+    <div class="list list-inset">
+    <div class="list list-inset">
+      <label class="item item-input item-floating-label">
+        Date
+        <input type="date" placeholder="" ng-model="data.Date">
+      </label>
+    </div>
+    <div class="list list-inset">
+      <label class="item item-input item-floating-label">
+        Appointment Start Time
+        <input type="time" placeholder="" ng-model="data.TimeStart">
+      </label>
+    </div>
+    <div class="list list-inset">
+      <label class="item item-input item-floating-label">
+        Appointment End Time
+        <input type="time" placeholder="" ng-model="data.TimeEnd">
+      </label>
+    </div>
+    <div class="list list-inset">
+      <label class="item item-input item-floating-label">
+        Notes
+        <textarea name="name" rows="8" cols="40" ng-model="data.Notes"></textarea>
+      </label>
+    </div>
+    <ul class="list">
+      <li class="item item-checkbox">
+         Is this an evaluation?
+         <label class="checkbox">
+         <input type="checkbox" ng-model="data.Evaluation">
+         </label>
+      </li>
+    </ul>
+    <h3>{{userMessage}}</h3>
+    <button class="button button-block button" ng-click="confirmEdit()">Confirm Edit</button>
+    <br/>
+    <br/>
+    <button class="button-block button button-assertive" ng-click="deleteAppointment()">Delete</button>
   </ion-content>
 </ion-view>
